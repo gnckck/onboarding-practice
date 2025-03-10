@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import BrowserExtension from "./pages/BrowserExtension";
 import "./index.css";
-import Pokemon from "./pages/Pokemon";
+import PokemonPage from "./pages/PokemonPage";
 
 function App() {
   return (
@@ -11,7 +11,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/browser-extension" element={<BrowserExtension />} />
-          <Route path="/pokemon" element={<Pokemon />} />
+          <Route path="/pokemon" element={<PokemonPage />} />
         </Routes>
       </BrowserRouter>
     </div>
