@@ -1,9 +1,10 @@
+import axios from "axios";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { PokemonListItem, Pokemon } from "@/types/pokemon";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import axios from "axios";
+
 import { minimumLoadingTime } from "@/lib/mininumLoadingTime";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,12 @@ export default function PokemonPage() {
     fetchPokemonList();
   }, []);
 
+  const LoadingState = () => (
+    <div className="flex justify-center items-center h-full w-full">
+      <LoadingSpinner size="lg" />
+    </div>
+  );
+
   // const getDefaultPokemon = (): Pokemon => ({
   //   id: 0,
   //   name: "",
@@ -56,17 +63,24 @@ export default function PokemonPage() {
       // setPokemonDetail(getDefaultPokemon);
     } else {
       setSelectedPokemon(pokemon.name);
-      fetchPokemonInfo(pokemon.url);
+      if (!loading) {
+        fetchPokemonInfo(pokemon.url);
+      }
     }
   };
 
   const fetchPokemonInfo = async (pokemonUrl: string) => {
-    setLoading(true);
-    await minimumLoadingTime();
-    const response = await axios.get(pokemonUrl);
+    try {
+      setLoading(true);
+      await minimumLoadingTime();
+      const response = await axios.get(pokemonUrl);
 
-    setPokemonDetail(response.data);
-    setLoading(false);
+      setPokemonDetail(response.data);
+    } catch (error) {
+      console.error("", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,9 +88,7 @@ export default function PokemonPage() {
       <Card className="p-5 w-150 mr-5">
         <h2 className="text-xl font-bold ">포켓몬 목록</h2>
         {loading && pokemonList.length <= 0 ? (
-          <div className="flex justify-center items-center h-full w-full">
-            <LoadingSpinner size="lg" />
-          </div>
+          <LoadingState />
         ) : (
           <div className="flex flex-wrap gap-2">
             {pokemonList.map((pokemon) => (
@@ -96,15 +108,14 @@ export default function PokemonPage() {
       </Card>
       <Card className="p-5 w-80 items-center">
         <h2 className="text-xl font-bold">포켓몬 상세정보</h2>
+
         {selectedPokemon === null ? (
           <>
             <InformationCircleIcon className="h-20 mt-20 text-gray-600" />
             <p className="text-gray-500">왼쪽 목록에서 포켓몬을 선택해주세요</p>
           </>
         ) : loading ? (
-          <div className="flex justify-center items-center h-full w-full">
-            <LoadingSpinner size="lg" />
-          </div>
+          <LoadingState />
         ) : (
           <>
             <div className="flex flex-col items-center">
@@ -128,6 +139,7 @@ export default function PokemonPage() {
                 <div className="flex flex-row">
                   {pokemonDetail!.types.map((types) => (
                     <Button
+                      key={types.type.name}
                       className={`m-1 mt-2 ${getTypeColor(types.type.name)}`}
                     >
                       <span>{types.type.name}</span>
