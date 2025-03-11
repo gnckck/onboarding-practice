@@ -127,7 +127,9 @@ export default function PokemonPage() {
                 <p className="text-xl font-bold">타입</p>
                 <div className="flex flex-row">
                   {pokemonDetail!.types.map((types) => (
-                    <Button>
+                    <Button
+                      className={`m-1 mt-2 ${getTypeColor(types.type.name)}`}
+                    >
                       <span>{types.type.name}</span>
                     </Button>
                   ))}
