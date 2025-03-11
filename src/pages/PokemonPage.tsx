@@ -9,6 +9,14 @@ import { minimumLoadingTime } from "@/lib/mininumLoadingTime";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { getTypeColor } from "@/lib/getTypeColor";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function PokemonPage() {
   const [selectedPokemon, setSelectedPokemon] = useState<string | null>(null);
@@ -16,15 +24,24 @@ export default function PokemonPage() {
   const [pokemonList, setPokemonList] = useState<PokemonListItem[]>([]);
   const [pokemonDetail, setPokemonDetail] = useState<Pokemon | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // 로딩 상태
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const itemsPerPage = 20;
 
   // 🔹 포켓몬 목록 가져오기
   useEffect(() => {
     const fetchPokemonList = async () => {
       try {
-        await minimumLoadingTime();
-        const response = await axios.get("https://pokeapi.co/api/v2/pokemon");
+        if (loading) {
+          await minimumLoadingTime();
+        }
+        const offset = (currentPage - 1) * itemsPerPage;
+        const response = await axios.get(
+          `https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${itemsPerPage}`
+        );
         const pokemons: PokemonListItem[] = response.data.results;
         setPokemonList(pokemons);
+        setTotalPages(Math.ceil(response.data.count / itemsPerPage));
       } catch (error) {
         console.error("", error);
       } finally {
@@ -32,7 +49,7 @@ export default function PokemonPage() {
       }
     };
     fetchPokemonList();
-  }, []);
+  }, [currentPage]);
 
   const LoadingState = () => (
     <div className="flex justify-center items-center h-full w-full">
@@ -40,27 +57,16 @@ export default function PokemonPage() {
     </div>
   );
 
-  // const getDefaultPokemon = (): Pokemon => ({
-  //   id: 0,
-  //   name: "",
-  //   height: 0,
-  //   weight: 0,
-  //   sprites: {
-  //     front_default: "",
-  // back_default:  "",
-  // front_shiny: "",
-  // back_shiny: "",
-  //   },
-  //   types: [],
-  //   stats: [],
-  //   abilities: [],
-  // });
+  const handlePageChange = (page: number) => {
+    setSelectedPokemon(null);
+    setPokemonDetail(null);
+    setCurrentPage(page);
+  };
 
   const togglePokemon = (pokemon: PokemonListItem) => {
     if (selectedPokemon === pokemon.name) {
       setSelectedPokemon(null);
       setPokemonDetail(null);
-      // setPokemonDetail(getDefaultPokemon);
     } else {
       setSelectedPokemon(pokemon.name);
       if (!loading) {
@@ -83,6 +89,33 @@ export default function PokemonPage() {
     }
   };
 
+  const generatePaginationItems = () => {
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, currentPage - 2); // 4 부터 startPage 바뀌도록 적용
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    return [...Array(maxVisiblePages)].map((_, index) => {
+      const pageNumber = startPage + index;
+      if (startPage + index <= totalPages) {
+        return (
+          <PaginationItem key={pageNumber}>
+            <PaginationLink
+              onClick={() => handlePageChange(pageNumber)}
+              isActive={currentPage === pageNumber}
+            >
+              {pageNumber}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    });
+  };
+
   return (
     <div className="p-5 flex h-[50vh] justify-center">
       <Card className="p-5 w-150 mr-5">
@@ -90,19 +123,50 @@ export default function PokemonPage() {
         {loading && pokemonList.length <= 0 ? (
           <LoadingState />
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {pokemonList.map((pokemon) => (
-              <Badge
-                key={pokemon.name}
-                variant="outline"
-                className={`m-1 cursor-pointer hover:bg-gray-100 ${
-                  selectedPokemon === pokemon.name ? "border-black" : ""
-                } `}
-                onClick={() => togglePokemon(pokemon)}
-              >
-                <span className="p-1">{pokemon.name}</span>
-              </Badge>
-            ))}
+          <div className="flex-1 flex flex-col">
+            <div className="flex flex-wrap gap-2">
+              {pokemonList.map((pokemon) => (
+                <Badge
+                  key={pokemon.name}
+                  variant="outline"
+                  className={`m-1 cursor-pointer hover:bg-gray-100 ${
+                    selectedPokemon === pokemon.name ? "border-black" : ""
+                  } `}
+                  onClick={() => togglePokemon(pokemon)}
+                >
+                  <span className="p-1">{pokemon.name}</span>
+                </Badge>
+              ))}
+            </div>
+            <div className="mt-auto">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => {
+                        if (currentPage === 1) {
+                          return handlePageChange(totalPages);
+                        }
+                        handlePageChange(currentPage - 1);
+                      }}
+                    />
+                  </PaginationItem>
+
+                  {generatePaginationItems()}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => {
+                        if (currentPage === totalPages) {
+                          return handlePageChange(1);
+                        }
+                        handlePageChange(currentPage + 1);
+                      }}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         )}
       </Card>
@@ -132,7 +196,6 @@ export default function PokemonPage() {
                   src={pokemonDetail!.sprites.back_default!}
                   className="w-32 h-32 object-contain mt-4"
                 />
-                <image></image>
               </div>
               <div className="flex flex-col items-center mt-5">
                 <p className="text-xl font-bold">타입</p>
