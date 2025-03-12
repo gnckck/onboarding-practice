@@ -23,15 +23,28 @@ export default function Pokemon() {
 
   const [pokemonList, setPokemonList] = useState<PokemonListItem[]>([]);
   const [pokemonDetail, setPokemonDetail] = useState<PokemonType | null>(null);
-  const [loading, setLoading] = useState<boolean>(true); // 로딩 상태
+  const [isFirstLoaded, setFirstLoaded] = useState<boolean>(false);
+  const [pokemonInfoLoading, setPokemonInfoLoading] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
   const itemsPerPage = 20;
 
-  // 🔹 포켓몬 목록 가져오기
   useEffect(() => {
-    const fetchPokemonList = async () => {
-      setLoading(true);
+    setFirstLoaded(true);
+    const loading = async () => {
+      try {
+        await minimumLoadingTime();
+      } catch (error) {
+        console.error("", error);
+      } finally {
+        setFirstLoaded(false);
+      }
+    };
+    loading();
+  }, []);
+
+  useEffect(() => {
+    const fetchPokemonsByPage = async () => {
       try {
         const offset = (currentPage - 1) * itemsPerPage;
         const response = await axios.get(
@@ -42,42 +55,36 @@ export default function Pokemon() {
         setTotalPages(Math.ceil(response.data.count / itemsPerPage));
       } catch (error) {
         console.error("", error);
-      } finally {
-        setLoading(false);
       }
     };
-    fetchPokemonList();
+    fetchPokemonsByPage();
   }, [currentPage]);
 
   const handlePageChange = (page: number) => {
-    setSelectedPokemon(null);
-    setPokemonDetail(null);
     setCurrentPage(page);
   };
 
   const togglePokemon = (pokemon: PokemonListItem) => {
+    if (pokemonInfoLoading) return;
     if (selectedPokemon === pokemon.name) {
       setSelectedPokemon(null);
       setPokemonDetail(null);
     } else {
       setSelectedPokemon(pokemon.name);
-      if (!loading) {
-        fetchPokemonInfo(pokemon.url);
-      }
+      fetchPokemonInfo(pokemon.url);
     }
   };
 
   const fetchPokemonInfo = async (pokemonUrl: string) => {
+    setPokemonInfoLoading(true);
     try {
-      setLoading(true);
       await minimumLoadingTime();
       const response = await axios.get(pokemonUrl);
-
       setPokemonDetail(response.data);
     } catch (error) {
       console.error("", error);
     } finally {
-      setLoading(false);
+      setPokemonInfoLoading(false);
     }
   };
 
@@ -97,7 +104,7 @@ export default function Pokemon() {
       );
     }
 
-    if (loading) {
+    if (pokemonInfoLoading) {
       return <LoadingState />;
     }
 
@@ -165,7 +172,7 @@ export default function Pokemon() {
     <div className="p-5 flex h-[50vh] justify-center">
       <Card className="p-5 w-150 mr-5">
         <h2 className="text-xl font-bold ">포켓몬 목록</h2>
-        {loading && pokemonList.length <= 0 ? (
+        {isFirstLoaded ? (
           <LoadingState />
         ) : (
           <div className="flex-1 flex flex-col">
