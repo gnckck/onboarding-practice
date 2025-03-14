@@ -1,7 +1,7 @@
-import Pokemon from "@/views/pokemon";
+import { PokemonCard } from "@/views/pokemon/PokemonCard";
 
 const PokemonPage = () => {
-  return <Pokemon />;
+  return <PokemonCard />;
 };
 
 export default PokemonPage;
