@@ -3,21 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getTypeColor } from "@/lib/getTypeColor";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { Pokemon } from "@/types/pokemon";
+import { usePokemonDetail } from "@/hooks/queries/usePokemonDetail";
 
 interface PokemonInfoProps {
-  pokemonDetail: Pokemon | null;
-  selectedPokemon: string | null;
-  isPokemonInfoLoading: boolean;
+  selectedPokemonUrl: string | null;
 }
 
-export const PokemonInfo = ({
-  pokemonDetail,
-  selectedPokemon,
-  isPokemonInfoLoading,
-}: PokemonInfoProps) => {
+export const PokemonInfo = ({ selectedPokemonUrl }: PokemonInfoProps) => {
+  const {
+    pokemonDetail,
+    isLoading: isPokemonInfoLoading,
+    // error,
+  } = usePokemonDetail(selectedPokemonUrl || "");
+
   const PokemonInfoContent = () => {
-    if (selectedPokemon === null) {
+    if (selectedPokemonUrl === null) {
       return (
         <>
           <InformationCircleIcon className="h-20 mt-20 text-gray-600" />
