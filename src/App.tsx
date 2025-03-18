@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import BrowserExtension from "./pages/BrowserExtension";
 import "./index.css";
 import PokemonPage from "./pages/PokemonPage";
+import Favorite from "./pages/Favorite";
 
 // QueryClient 인스턴스 생성
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/browser-extension" element={<BrowserExtension />} />
             <Route path="/pokemon" element={<PokemonPage />} />
+            <Route path="/pokemon-favorite" element={<Favorite />} />
           </Routes>
         </BrowserRouter>
       </div>

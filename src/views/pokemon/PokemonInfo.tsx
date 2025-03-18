@@ -1,20 +1,17 @@
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getTypeColor } from "@/lib/getTypeColor";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { usePokemonDetail } from "@/hooks/queries/usePokemonDetail";
+import InfoCard from "./components/InfoCard";
 
 interface PokemonInfoProps {
-  selectedPokemonUrl: string | null;
+  selectedPokemonUrl?: string | null;
 }
 
 export const PokemonInfo = ({ selectedPokemonUrl }: PokemonInfoProps) => {
-  const {
-    pokemonDetail,
-    isLoading: isPokemonInfoLoading,
-    // error,
-  } = usePokemonDetail(selectedPokemonUrl || "");
+  const { pokemonDetail, isLoading: isPokemonInfoLoading } = usePokemonDetail(
+    selectedPokemonUrl || ""
+  );
 
   const PokemonInfoContent = () => {
     if (selectedPokemonUrl === null) {
@@ -34,37 +31,7 @@ export const PokemonInfo = ({ selectedPokemonUrl }: PokemonInfoProps) => {
       );
     }
 
-    return (
-      <div className="flex flex-col items-center">
-        <p className=" text-3xl font-bold">{pokemonDetail?.name}</p>
-        <p className=" text-xl text-gray-500 mt-5">
-          {`#${String(pokemonDetail!.id).padStart(3, "0")}`}
-        </p>
-        <div className="flex flex-row">
-          <img
-            src={pokemonDetail!.sprites.front_default}
-            className="w-32 h-32 object-contain mt-4"
-          />
-          <img
-            src={pokemonDetail!.sprites.back_default!}
-            className="w-32 h-32 object-contain mt-4"
-          />
-        </div>
-        <div className="flex flex-col items-center mt-5">
-          <p className="text-xl font-bold">타입</p>
-          <div className="flex flex-row">
-            {pokemonDetail?.types?.map((types) => (
-              <Button
-                key={types.type.name}
-                className={`m-1 mt-2 ${getTypeColor(types.type.name)}`}
-              >
-                <span>{types.type.name}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <InfoCard pokemonDetail={pokemonDetail!} />;
   };
 
   return (
